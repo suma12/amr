@@ -48,4 +48,4 @@ The code is licensed under [GNU Lesser General Public License, version 2.1](http
 1. [3GPP TS 26.101](http://www.3gpp.org/ftp/Specs/html-info/26101.htm) (AMR)
 2. [3GPP TS 26.201](http://www.3gpp.org/ftp/Specs/html-info/26201.htm) (AMR-WB)
 3. RFC 4867 - RTP Payload Format and File Storage Format for the Adaptive Multi-Rate (AMR) and Adaptive Multi-Rate Wideband (AMR-WB) Audio Codecs
-4. [AMR Player](www.amrplayer.com)
+4. [AMR Player](http://www.amrplayer.com)
