@@ -7,6 +7,8 @@ AMR (Adaptive Multi-Rate) and AMR-WB (Adaptive Multi-Rate Wideband) are audio co
 The purpose of this project is to provide conversion from RTP payload (as captured e.g. by Wireshark) to AMR storage format (which can be played/converted to .wav/mp3 by AMR player [4]).
 
 ## Usage
+Use Python 2.7, the code does not work with Python 3.
+
 ```
 usage: amr.py [-h] [-w] [-a] [-n N_CHAN] [-v] [-V] raw [amr]
 
