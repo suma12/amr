@@ -14,7 +14,7 @@ from binascii import unhexlify
 class BitIterator:
     """Read consequently n-bit bitstreams from bitstream in data"""
     def __init__(self, data):
-        self.data = data + '\0'     # stop mark
+        self.data = data + bytearray(b'\0')
         self.offset = 0
 
     def read(self, n):
@@ -24,12 +24,12 @@ class BitIterator:
             return ""
         i = self.offset >> 3         # the first byte of data to process
         sh = self.offset % 8         # shift data -> output
-        x = ord(self.data[i])
+        x = self.data[i]
         dataout = []
-        for _ in xrange((n + 7) >> 3):   # number of bytes to output
+        for _ in range((n + 7) >> 3):   # number of bytes to output
             val = (x << sh) & 0xFF
             i += 1
-            x = ord(self.data[i])
+            x = self.data[i]
             val |= x >> (8 - sh)
             dataout.append(val)
         self.offset += n
@@ -37,7 +37,7 @@ class BitIterator:
         if nb < 8:
             mask = 0x100 - (1 << nb)
             dataout[-1] &= mask
-        return ''.join([chr(val) for val in dataout])
+        return bytearray(dataout)
 
     def byte_align(self):
         """Align offset forward to byte boundary"""
@@ -50,14 +50,14 @@ class BitIterator:
         i = self.offset >> 3
         sh = self.offset % 8
         s = ''
-        s = ' '.join([ "{0:08b}".format(ord(c)) for c in self.data[:i]])
+        s = ' '.join([ "{0:08b}".format(c) for c in self.data[:i]])
         if sh > 0:
-            s += " {0:08b}".format(ord(self.data[i]))[:1+sh]
+            s += " {0:08b}".format(self.data[i])[:1+sh]
         s += ' | '
         if sh > 0:
-            s += "{0:08b} ".format(ord(self.data[i]))[sh:]
+            s += "{0:08b} ".format(self.data[i])[sh:]
             i += 1
-        s += ' '.join([ "{0:08b}".format(ord(c)) for c in self.data[i:-1]])
+        s += ' '.join([ "{0:08b}".format(c) for c in self.data[i:-1]])
         return s
 
 class BitMerger:
@@ -77,7 +77,7 @@ class BitMerger:
             raise IndexError
         if bitlen == 0:
             return
-        for x in [ord(c) for c in data]:
+        for x in data:
             if self.offset == 0:
                 self.complete.append(x)
             else:
@@ -91,9 +91,9 @@ class BitMerger:
         self.lastVal &= mask
 
     def result(self):
-        res = ''.join([chr(val) for val in self.complete])
+        res = bytearray(self.complete)
         if self.offset > 0:
-            res += chr(self.lastVal)
+            res += bytearray([self.lastVal])
         return (res, self.bitlen())
 
     def __str__(self):
@@ -138,15 +138,15 @@ Neither interleaving nor CRC are supported."""
                 header = b.read(self.round(4))
             toc = []
             while True:
-                t = ord(b.read(self.round(6)))
-                toc.append(t & 0x7C)   # mask F and R bits
-                if t & 0x80 == 0:      # break for the last entry
+                t = b.read(self.round(6))
+                toc.append(t[0] & 0x7C)   # mask F and R bits
+                if t[0] & 0x80 == 0:      # break for the last entry
                     break 
             for t in toc:
                 mode = t >> 3
                 assert mode <= self.invalidMode[0] or \
                     mode >= self.invalidMode[1]
-                self.fileOut.write(chr(t))
+                self.fileOut.write(bytes([t]))
                 self.sample += 1
                 if mode <= self.invalidMode[0]:
                     nbits = AMR.SPEECHBITS[self.zWB][mode]
@@ -166,7 +166,7 @@ Neither interleaving nor CRC are supported."""
             magick = self.zWB and "#!AMR-WB_MC1.0\n" or "#!AMR_MC1.0\n"
             magick += pack(">I", self.nCHAN)
         self.fileOut = open(fileName, "wb")
-        self.fileOut.write(magick)
+        self.fileOut.write(bytes(magick, 'utf-8'))
 
     def closeOutput(self):
         if self.fileOut:
@@ -253,10 +253,10 @@ if __name__ == '__main__':
             args.amr = args.raw + '.amr'
 
     if args.verbose:
-        print args.wideband and "AMR-WB," or "AMR,",
-        print args.octet_align and "octet-align," or "bandwidth efficient,",
-        print "%d channel(s)" % args.n_chan
-        print "Files: %s -> %s" % (args.raw, args.amr)
+        print(args.wideband and "AMR-WB," or "AMR,", end=' ')
+        print(args.octet_align and "octet-align," or "bandwidth efficient,", end=' ')
+        print("%d channel(s)" % args.n_chan)
+        print("Files: %s -> %s" % (args.raw, args.amr))
 
     a = AMR(zWB=args.wideband, zOctetAlign=args.octet_align, nCHAN=args.n_chan)
     a.openOutput(args.amr)
@@ -264,4 +264,4 @@ if __name__ == '__main__':
     a.closeOutput()
 
     if args.verbose:
-        print "Done, %d samples converted" % a.sample
+        print("Done, %d samples converted" % a.sample)
